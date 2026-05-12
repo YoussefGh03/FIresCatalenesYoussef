@@ -20,7 +20,9 @@ import { LlistatComponent } from '../../elements/llistat/llistat';
         @if (comarcaTriada) {
           <app-llistat 
             [nomComarca]="comarcaTriada" 
-            [fires]="firesFiltrades">
+            [fires]="firesFiltrades"
+            [idsFavorits]="idsFavorits"
+            (canviFavorits)="gestionarFavorit($event.accio, $event.id)">
           </app-llistat>
         } @else {
           <div class="avís">Selecciona una comarca de la llista per veure les fires.</div>
@@ -37,14 +39,38 @@ export class FiresComponent implements OnInit {
   comarques: string[] = [];
   firesFiltrades: Fira[] = [];
   comarcaTriada: string = '';
+  idsFavorits: string[] = [];
 
   ngOnInit() {
     const llista = FAIRS.map(f => f.regionName);
     this.comarques = [...new Set(llista)].sort();
+    
+    // Carreguem els favorits en iniciar la pàgina
+    this.carregarFavorits();
+  }
+
+  carregarFavorits() {
+    this.idsFavorits = JSON.parse(localStorage.getItem('preferits_ids') || '[]');
   }
 
   filtrar(comarca: string) {
     this.comarcaTriada = comarca;
     this.firesFiltrades = FAIRS.filter(f => f.regionName === comarca);
+  }
+
+  // Aquesta és la funció que faltava per fer funcionar el botó de guardar/eliminar
+  gestionarFavorit(accio: string, id: string) {
+    let ids = JSON.parse(localStorage.getItem('preferits_ids') || '[]');
+    
+    if (accio === 'guardar') {
+      if (!ids.includes(id)) ids.push(id);
+    } else {
+      ids = ids.filter((i: string) => i !== id);
+    }
+    
+    localStorage.setItem('preferits_ids', JSON.stringify(ids));
+    
+    // Actualitzem la llista local perquè el component de Llistat reaccioni al moment
+    this.carregarFavorits();
   }
 }
