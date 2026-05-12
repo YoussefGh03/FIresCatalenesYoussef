@@ -1,0 +1,12 @@
+<div class="sidebar">
+  <h3>Comarques</h3>
+  <div class="llista">
+    @for (c of comarques; track c) {
+      <button 
+        (click)="seleccionar(c)" 
+        [class.activa]="c === seleccionada">
+        {{ c }}
+      </button>
+    }
+  </div>
+</div>

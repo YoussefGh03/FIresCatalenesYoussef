@@ -1,0 +1,41 @@
+.sidebar {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  max-height: 80vh; /* Alçada màxima (80% de la pantalla) */
+  overflow-y: auto; /* Afegeix scroll intern si fa falta */
+}
+
+h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.llista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+button {
+  text-align: left;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+button:hover {
+  background: #e9ecef;
+}
+
+.activa {
+  background: #0056b3;
+  color: white;
+  border-color: #0056b3;
+  font-weight: bold;
+}

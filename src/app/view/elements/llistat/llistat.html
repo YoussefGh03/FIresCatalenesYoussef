@@ -1,0 +1,11 @@
+<h2>Fires de la comarca: {{ nomComarca }}</h2>
+<div class="grid">
+  @for (fira of fires; track fira.activityId) {
+    <div class="card">
+      <h4>{{ fira.activityName }}</h4>
+      <p><strong>Població:</strong> {{ fira.municipalityName }}</p>
+      <p><strong>Data:</strong> {{ fira.date }}</p>
+      <button (click)="guardarFavorit(fira)">⭐ Guardar preferit</button>
+    </div>
+  }
+</div>
