@@ -18,13 +18,13 @@ import { RouterLink } from '@angular/router';
             <div class="mini-card">
               <p><strong>{{ fira.activityName }}</strong></p>
               <div class="mini-botons">
-                <a [routerLink]="['/detall', fira.activityId]">Veure més</a>
-                <button (click)="eliminarPreferit(fira.activityId)" class="btn-text-delete">Eliminar</button>
+                <a [routerLink]="['/detall', fira.activityId]">Detall</a>
+                <button (click)="gestionarFavorit('eliminar', fira.activityId)" class="btn-text-delete">Eliminar</button>
               </div>
             </div>
           }
         </div>
-        <ng-template #noFavs><p class="text-buit">No tens cap fira guardada encara.</p></ng-template>
+        <ng-template #noFavs><p class="text-buit">No tens cap fira guardada.</p></ng-template>
       </section>
 
       <hr>
@@ -32,16 +32,13 @@ import { RouterLink } from '@angular/router';
       <section class="seccio-cerca">
         <h2>Cerca fires per comarca</h2>
         <div class="layout-cerca">
-          <app-selector 
-            [comarques]="comarques" 
-            [seleccionada]="comarcaTriada" 
-            (comarcaClicada)="filtrar($event)">
-          </app-selector>
+          <app-selector [comarques]="comarques" [seleccionada]="comarcaTriada" (comarcaClicada)="filtrar($event)"></app-selector>
           
           <app-llistat 
             [nomComarca]="comarcaTriada" 
             [fires]="firesFiltrades"
-            (favoritsActualitzats)="carregarPreferits()">
+            [idsFavorits]="idsFavorits"
+            (canviFavorits)="gestionarFavorit($event.accio, $event.id)">
           </app-llistat>
         </div>
       </section>
@@ -50,16 +47,11 @@ import { RouterLink } from '@angular/router';
   styles: [`
     .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
     h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-    .mini-grid { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
-    .mini-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; flex: 1; min-width: 200px; display: flex; flex-direction: column; justify-content: space-between;}
-    .mini-card p { margin-top: 0; margin-bottom: 10px; }
-    .mini-botons { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 10px;}
-    .mini-botons a { color: #0056b3; font-weight: bold; text-decoration: none; font-size: 0.9rem; }
-    .mini-botons a:hover { text-decoration: underline; }
-    .btn-text-delete { background: none; border: none; color: #c62828; cursor: pointer; font-size: 0.9rem; padding: 0;}
-    .btn-text-delete:hover { text-decoration: underline; }
-    .text-buit { color: #666; font-style: italic; }
-    .layout-cerca { display: grid; grid-template-columns: 250px 1fr; gap: 20px; margin-top: 20px; align-items: start; }
+    .mini-grid { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    .mini-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; flex: 1; min-width: 200px; }
+    .mini-botons { display: flex; justify-content: space-between; margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px; }
+    .btn-text-delete { background: none; border: none; color: #c62828; cursor: pointer; padding: 0; font-weight: bold; }
+    .layout-cerca { display: grid; grid-template-columns: 250px 1fr; gap: 20px; margin-top: 20px; }
     hr { margin: 40px 0; border: 0; border-top: 1px solid #eee; }
   `]
 })
@@ -68,37 +60,37 @@ export class HomeComponent implements OnInit {
   firesFiltrades: Fira[] = [];
   comarcaTriada: string = '';
   preferides: Fira[] = [];
+  idsFavorits: string[] = [];
 
   ngOnInit() {
     const llista = FAIRS.map(f => f.regionName);
     this.comarques = [...new Set(llista)].sort();
-    this.carregarPreferits();
+    this.actualitzarEstatFavorits();
   }
 
-  // Aquesta funció s'executa a l'inici, quan eliminem des de la mini-card, 
-  // o quan el component fill (Llistat) ens avisa que ha guardat/eliminat alguna cosa.
-  carregarPreferits() {
-    const ids = JSON.parse(localStorage.getItem('preferits_ids') || '[]');
-    this.preferides = FAIRS.filter(f => ids.includes(f.activityId));
+  // Aquesta funció llegeix el LocalStorage i actualitza totes les variables de la vista
+  actualitzarEstatFavorits() {
+    this.idsFavorits = JSON.parse(localStorage.getItem('preferits_ids') || '[]');
+    this.preferides = FAIRS.filter(f => this.idsFavorits.includes(f.activityId));
+  }
+
+  gestionarFavorit(accio: string, id: string) {
+    let ids = JSON.parse(localStorage.getItem('preferits_ids') || '[]');
+    
+    if (accio === 'guardar') {
+      if (!ids.includes(id)) ids.push(id);
+    } else {
+      ids = ids.filter((i: string) => i !== id);
+    }
+    
+    localStorage.setItem('preferits_ids', JSON.stringify(ids));
+    
+    // Al cridar aquesta funció, la Home es refresca i li envia els nous IDs al Llistat
+    this.actualitzarEstatFavorits();
   }
 
   filtrar(comarca: string) {
     this.comarcaTriada = comarca;
     this.firesFiltrades = FAIRS.filter(f => f.regionName === comarca);
-  }
-
-  eliminarPreferit(id: string) {
-    let ids = JSON.parse(localStorage.getItem('preferits_ids') || '[]');
-    ids = ids.filter((guardatId: string) => guardatId !== id);
-    localStorage.setItem('preferits_ids', JSON.stringify(ids));
-    
-    // Al eliminar-ho del LocalStorage, tornem a carregar l'array d'aquesta vista
-    this.carregarPreferits();
-    
-    // Perquè el component de Llistat s'adoni del canvi, modifiquem temporalment
-    // el filtre i el tornem a posar (això força la detecció de canvis dels fills).
-    const comarcaActual = this.comarcaTriada;
-    this.comarcaTriada = '';
-    setTimeout(() => this.comarcaTriada = comarcaActual, 0);
   }
 }
